@@ -549,3 +549,345 @@ impl fmt::Display for RgbColor {
         write!(f, "({},{},{})", self.r, self.g, self.b)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // -----------------------------------------------------------------------
+    // Color::hex
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn hex_parses_six_digit() {
+        let c = Color::hex("ff7f50");
+        assert_eq!(c.to_string(), "#ff7f50");
+    }
+
+    #[test]
+    fn hex_strips_leading_hash() {
+        let c = Color::hex("#ff7f50");
+        assert_eq!(c.to_string(), "#ff7f50");
+    }
+
+    #[test]
+    fn hex_pads_short_input() {
+        let c = Color::hex("fff");
+        assert_eq!(c.to_string(), "#000fff");
+    }
+
+    #[test]
+    fn hex_pads_single_char() {
+        let c = Color::hex("0");
+        assert_eq!(c.to_string(), "#000000");
+    }
+
+    #[test]
+    fn hex_empty_pads_to_all_zeroes() {
+        let c = Color::hex("");
+        assert_eq!(c.to_string(), "#000000");
+    }
+
+    #[test]
+    fn hex_lowercases_uppercase() {
+        let c = Color::hex("FFF");
+        assert_eq!(c.to_string(), "#000fff");
+    }
+
+    #[test]
+    #[should_panic(expected = "Invalid hex color")]
+    fn hex_rejects_overlong() {
+        Color::hex("fffffff");
+    }
+
+    #[test]
+    #[should_panic(expected = "Invalid hex color")]
+    fn hex_rejects_non_hex() {
+        Color::hex("ffxx00");
+    }
+
+    #[test]
+    #[should_panic(expected = "Invalid hex color")]
+    fn hex_rejects_special_chars() {
+        Color::hex("ff-00!");
+    }
+
+    // -----------------------------------------------------------------------
+    // Color::rgb
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn rgb_creates_color() {
+        let c = Color::rgb(255, 128, 64);
+        assert_eq!(c.r, 255);
+        assert_eq!(c.g, 128);
+        assert_eq!(c.b, 64);
+    }
+
+    #[test]
+    fn rgb_zero_values() {
+        let c = Color::rgb(0, 0, 0);
+        assert_eq!(c.to_string(), "(0,0,0)");
+    }
+
+    #[test]
+    fn rgb_max_values() {
+        let c = Color::rgb(255, 255, 255);
+        assert_eq!(c.to_string(), "(255,255,255)");
+    }
+
+    // -----------------------------------------------------------------------
+    // Color::by_name
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn by_name_known_colors() {
+        assert_eq!(Color::by_name("red").to_string(), "#ff0000");
+        assert_eq!(Color::by_name("lime").to_string(), "#00ff00");
+        assert_eq!(Color::by_name("blue").to_string(), "#0000ff");
+        assert_eq!(Color::by_name("white").to_string(), "#ffffff");
+        assert_eq!(Color::by_name("orange").to_string(), "#ffa500");
+    }
+
+    #[test]
+    fn by_name_case_sensitive() {
+        assert_eq!(Color::by_name("RED").to_string(), "#000000");
+    }
+
+    #[test]
+    fn by_name_unknown_falls_back_to_black() {
+        assert_eq!(Color::by_name("nonexistent").to_string(), "#000000");
+    }
+
+    // -----------------------------------------------------------------------
+    // RgbColor
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn rgb_round_trips_to_hex_and_back() {
+        let rgb = RgbColor::new(30, 144, 255);
+        let hex = rgb.to_hex();
+        let back = hex.to_rgb();
+        assert_eq!(rgb.r, back.r);
+        assert_eq!(rgb.g, back.g);
+        assert_eq!(rgb.b, back.b);
+    }
+
+    #[test]
+    fn rgb_to_hex_conversion() {
+        let rgb = RgbColor::new(255, 165, 0);
+        assert_eq!(rgb.to_hex().to_string(), "#ffa500");
+    }
+
+    #[test]
+    fn rgb_is_equal_compares_with_hex() {
+        let rgb = Color::rgb(255, 165, 0);
+        let hex = Color::hex("ffa500");
+        assert!(rgb.is_equal(&hex));
+        assert!(!rgb.is_equal(&Color::hex("ffffff")));
+    }
+
+    #[test]
+    fn rgb_set_red_chaining() {
+        let mut c = RgbColor::new(0, 0, 0);
+        c.set_red(100);
+        assert_eq!(c.r, 100);
+    }
+
+    #[test]
+    fn rgb_set_green_chaining() {
+        let mut c = RgbColor::new(0, 0, 0);
+        c.set_green(150);
+        assert_eq!(c.g, 150);
+    }
+
+    #[test]
+    fn rgb_set_blue_chaining() {
+        let mut c = RgbColor::new(0, 0, 0);
+        c.set_blue(200);
+        assert_eq!(c.b, 200);
+    }
+
+    #[test]
+    fn rgb_set_all_returns_self_for_chaining() {
+        let mut c = RgbColor::new(0, 0, 0);
+        let ptr: *const RgbColor = c.set_red(1).set_green(2).set_blue(3);
+        assert_eq!(c.r, 1);
+        assert_eq!(c.g, 2);
+        assert_eq!(c.b, 3);
+        // pointer check: chaining returns &mut self
+        assert_eq!(ptr, &c as *const RgbColor);
+    }
+
+    #[test]
+    fn rgb_set_color_red_variant() {
+        let mut c = RgbColor::new(10, 20, 30);
+        c.set_color(Colors::Red(255));
+        assert_eq!(c.r, 255);
+        assert_eq!(c.g, 20);
+        assert_eq!(c.b, 30);
+    }
+
+    #[test]
+    fn rgb_set_color_green_variant() {
+        let mut c = RgbColor::new(10, 20, 30);
+        c.set_color(Colors::Green(255));
+        assert_eq!(c.r, 10);
+        assert_eq!(c.g, 255);
+        assert_eq!(c.b, 30);
+    }
+
+    #[test]
+    fn rgb_set_color_blue_variant() {
+        let mut c = RgbColor::new(10, 20, 30);
+        c.set_color(Colors::Blue(255));
+        assert_eq!(c.r, 10);
+        assert_eq!(c.g, 20);
+        assert_eq!(c.b, 255);
+    }
+
+    #[test]
+    fn rgb_set_color_all_variant() {
+        let mut c = RgbColor::new(10, 20, 30);
+        c.set_color(Colors::All(128));
+        assert_eq!(c.r, 128);
+        assert_eq!(c.g, 128);
+        assert_eq!(c.b, 128);
+    }
+
+    #[test]
+    fn rgb_set_color_returns_self() {
+        let mut c = RgbColor::new(0, 0, 0);
+        c.set_color(Colors::All(1));
+        assert_eq!(c.r, 1);
+        assert_eq!(c.g, 1);
+        assert_eq!(c.b, 1);
+    }
+
+    #[test]
+    fn rgb_are_equal_identical() {
+        let a = RgbColor::new(10, 20, 30);
+        let b = RgbColor::new(10, 20, 30);
+        assert!(RgbColor::are_equal(&a, &b));
+    }
+
+    #[test]
+    fn rgb_are_equal_different() {
+        let a = RgbColor::new(10, 20, 30);
+        let b = RgbColor::new(99, 20, 30);
+        assert!(!RgbColor::are_equal(&a, &b));
+    }
+
+    #[test]
+    fn rgb_display_format() {
+        let c = RgbColor::new(1, 2, 3);
+        assert_eq!(format!("{}", c), "(1,2,3)");
+    }
+
+    // -----------------------------------------------------------------------
+    // HexColor
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn hex_parses_with_hash() {
+        let c = HexColor::new("#a52a2a");
+        assert_eq!(c.to_string(), "#a52a2a");
+    }
+
+    #[test]
+    fn hex_pads_to_six_digits() {
+        let c = HexColor::new("abc");
+        assert_eq!(c.to_string(), "#000abc");
+    }
+
+    #[test]
+    fn hex_stores_lowercase() {
+        let c = HexColor::new("ABC123");
+        assert_eq!(c.to_string(), "#abc123");
+    }
+
+    #[test]
+    fn hex_to_rgb_conversion() {
+        let hex = HexColor::new("ffa500");
+        let rgb = hex.to_rgb();
+        assert_eq!(rgb.r, 255);
+        assert_eq!(rgb.g, 165);
+        assert_eq!(rgb.b, 0);
+    }
+
+    #[test]
+    fn hex_is_equal_compares_with_rgb() {
+        let hex = Color::hex("ffa500");
+        let rgb = Color::rgb(255, 165, 0);
+        assert!(hex.is_equal(&rgb));
+        assert!(!hex.is_equal(&Color::rgb(0, 0, 0)));
+    }
+
+    #[test]
+    fn hex_are_equal_identical() {
+        let a = HexColor::new("c0ffee");
+        let b = HexColor::new("c0ffee");
+        assert!(HexColor::are_equal(&a, &b));
+    }
+
+    #[test]
+    fn hex_are_equal_different() {
+        let a = HexColor::new("c0ffee");
+        let b = HexColor::new("ffffff");
+        assert!(!HexColor::are_equal(&a, &b));
+    }
+
+    #[test]
+    fn hex_display_format() {
+        let c = HexColor::new("c0ffee");
+        assert_eq!(format!("{}", c), "#c0ffee");
+    }
+
+    #[test]
+    #[should_panic(expected = "Invalid hex color")]
+    fn hex_new_panics_on_garbage() {
+        HexColor::new("zzzzzz");
+    }
+
+    #[test]
+    #[should_panic(expected = "Invalid hex color")]
+    fn hex_new_panics_on_too_long() {
+        HexColor::new("1234567");
+    }
+
+    // -----------------------------------------------------------------------
+    // Integration: cross-type equality & round trips
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn round_trip_hex_rgb_hex() {
+        let original = "1e90ff";
+        let hex = Color::hex(original);
+        let rgb = hex.to_rgb();
+        assert_eq!(rgb.to_hex().to_string(), format!("#{original}"));
+    }
+
+    #[test]
+    fn round_trip_rgb_hex_rgb() {
+        let (r, g, b) = (50, 168, 82);
+        let rgb = Color::rgb(r, g, b);
+        let hex = rgb.to_hex();
+        let back = hex.to_rgb();
+        assert_eq!(back.r, r);
+        assert_eq!(back.g, g);
+        assert_eq!(back.b, b);
+    }
+
+    #[test]
+    fn hex_and_rgb_equivalence() {
+        let hex = Color::hex("ff7f50");
+        let rgb = Color::rgb(255, 127, 80);
+        assert!(hex.is_equal(&rgb));
+        assert!(rgb.is_equal(&hex));
+    }
+
+    // -----------------------------------------------------------------------
+    // color! macro
+    // -----------------------------------------------------------------------
+
+}
