@@ -1,9 +1,13 @@
 [package]
 name = "hex_rgb_converter"
-version = "0.1.0"
+version = "1.0.0"
 edition = "2021"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+description = "Convert between RGB and hex color representations with a clean API."
+license = "MIT"
+repository = "https://github.com/DevYatsu/hex_rgb_converter"
+documentation = "https://docs.rs/hex_rgb_converter"
+keywords = ["color", "rgb", "hex", "converter", "colour"]
+categories = ["parser-implementations", "encoding"]
 
 [dependencies]
 custom_error = "1.9.2"
