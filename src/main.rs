@@ -7,7 +7,7 @@ fn main() {
     let snd_color: RgbColor = my_color.to_rgb();
     println!("{} {}", my_color, snd_color);
 
-    let test_color: HexColor = hex!("#12ef78").to_rgb().to_hex();
+    let test_color: HexColor = Color::hex("#12ef78").to_rgb().to_hex();
     test_color.print();
 
     let mut rgb_col: RgbColor = color!(23, 2, 255);
@@ -18,7 +18,7 @@ fn main() {
         .set_color(Colors::All(120));
     println!("{} {}", rgb_col, rgb_col.to_hex());
 
-    let mut rgb_2: RgbColor = rgb!(2, 4, 5);
+    let mut rgb_2: RgbColor = Color::rgb(2, 4, 5);
     rgb_2.set_color(Colors::Blue(120));
     rgb_2.print();
 
