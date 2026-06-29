@@ -2,7 +2,7 @@
 name = "hex_rgb_converter"
 version = "1.0.0"
 edition = "2021"
-description = "Convert between RGB and hex color representations with a clean API."
+description = "Dead simple RGB ↔ hex color conversion."
 license = "MIT"
 repository = "https://github.com/DevYatsu/hex_rgb_converter"
 documentation = "https://docs.rs/hex_rgb_converter"
